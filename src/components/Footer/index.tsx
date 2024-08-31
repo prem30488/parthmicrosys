@@ -41,7 +41,7 @@ const Footer = () => {
                   </a>
                   
                   <a
-                    href="/"
+                    href="https://www.youtube.com/@parthprem30488"
                     aria-label="social-link"
                     target="_blank"
                     rel="noopener noreferrer"
@@ -57,7 +57,7 @@ const Footer = () => {
                     </svg>
                   </a>
                   <a
-                    href="/"
+                    href="https://www.linkedin.com/company/104641567"
                     aria-label="social-link"
                     target="_blank"
                     rel="noopener noreferrer"
