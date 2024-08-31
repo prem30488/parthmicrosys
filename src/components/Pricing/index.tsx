@@ -60,12 +60,12 @@ const Pricing = () => {
         <div className="grid grid-cols-1 gap-x-8 gap-y-10 md:grid-cols-2 lg:grid-cols-3">
           <PricingBox
             packageName="Lite"
-            price={isMonthly ? "30" : "330"}
+            price={isMonthly ? "5,000" : "50,000"}
             duration={isMonthly ? "mo" : "yr"}
-            subtitle="Lorem ipsum dolor sit amet adiscing elit Mauris egestas enim."
+            subtitle="React/Node Developer"
           >
             <OfferList text="All UI Components" status="active" />
-            <OfferList text="Use with Unlimited Projects" status="active" />
+            <OfferList text="Languages Nodejs, Reactjs, NextJS, Design" status="active" />
             <OfferList text="Commercial Use" status="active" />
             <OfferList text="Email Support" status="active" />
             <OfferList text="Lifetime Access" status="inactive" />
@@ -73,27 +73,30 @@ const Pricing = () => {
           </PricingBox>
           <PricingBox
             packageName="Basic"
-            price={isMonthly ? "399" : "789"}
+            price={isMonthly ? "5,500" : "55,000"}
             duration={isMonthly ? "mo" : "yr"}
-            subtitle="Lorem ipsum dolor sit amet adiscing elit Mauris egestas enim."
+            subtitle="Java Backend Developer"
           >
             <OfferList text="All UI Components" status="active" />
-            <OfferList text="Use with Unlimited Projects" status="active" />
+            <OfferList text="Languages Java, JSP, Servlet, Spring Boot, Microservices, Backend Development, Knowledge of Jira, Bitbucket or Gitlab, Scrum, SonraQube etc." status="active" />
             <OfferList text="Commercial Use" status="active" />
             <OfferList text="Email Support" status="active" />
+            <OfferList text="Extra hour Work maximum upto 3 hrs." status="active" />
             <OfferList text="Lifetime Access" status="active" />
             <OfferList text="Free Lifetime Updates" status="inactive" />
           </PricingBox>
           <PricingBox
             packageName="Plus"
-            price={isMonthly ? "589" : "999"}
+            price={isMonthly ? "6,000" : "70,000"}
             duration={isMonthly ? "mo" : "yr"}
-            subtitle="Lorem ipsum dolor sit amet adiscing elit Mauris egestas enim."
+            subtitle="Full stack Developer"
           >
             <OfferList text="All UI Components" status="active" />
-            <OfferList text="Use with Unlimited Projects" status="active" />
+            <OfferList text="Languages Java, JSP, Servlet, Spring Boot, Microservices, Backend Development, AWS Cloud" status="active" />
+            <OfferList text="Knowledge of Jira, Bitbucket or Gitlab, Scrum, Jenkins Pipeline, SonraQube, Docker, AWS, Microservices Architecture, Groovy, Liquibase, GIS etc." status="active" />
             <OfferList text="Commercial Use" status="active" />
             <OfferList text="Email Support" status="active" />
+            <OfferList text="Extra hour Work maximum upto 2 hrs." status="active" />
             <OfferList text="Lifetime Access" status="active" />
             <OfferList text="Free Lifetime Updates" status="active" />
           </PricingBox>
