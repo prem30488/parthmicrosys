@@ -62,7 +62,7 @@ const Header = () => {
                   width={140}
                   height={30}
                   className="w-full dark:hidden"
-                />
+                /> Parth Microsys
                 <Image
                   src="/images/logo/logo.svg"
                   alt="logo"
