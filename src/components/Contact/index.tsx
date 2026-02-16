@@ -21,11 +21,13 @@ const Contact = () => {
     setLoading(false);
 
     if (result.success) {
+      e.currentTarget.reset();
       toast.success("Message sent successfully!");
-      e.currentTarget.reset(); // optional: clear form
+
     } else {
       toast.error("Something went wrong.");
     }
+    e.currentTarget.reset();
   }
 
   return (
