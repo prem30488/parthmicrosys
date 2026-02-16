@@ -6,7 +6,7 @@ import ScrollToTop from "@/components/ScrollToTop";
 import { Inter } from "next/font/google";
 import "node_modules/react-modal-video/css/modal-video.css";
 import "../styles/index.css";
-
+import { Toaster } from "react-hot-toast";
 const inter = Inter({ subsets: ["latin"] });
 
 export default function RootLayout({
@@ -26,6 +26,7 @@ export default function RootLayout({
         <Providers>
           <Header />
           {children}
+          <Toaster position="top-right" reverseOrder={false} />
           <Footer />
           <ScrollToTop />
         </Providers>
