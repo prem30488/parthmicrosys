@@ -2,7 +2,7 @@ require('dotenv').config();
 
 module.exports = {
     PORT: process.env.PORT || 5000,
-    MONGO_URI: process.env.MONGO_URI || 'mongodb://localhost:27017/pdms',
+    MONGO_URI: process.env.MONGO_URI || 'mongodb://rare-tops-woodcock.ngrok-free.app:27017/pdms',
     JWT_SECRET: process.env.JWT_SECRET || 'fallback_secret',
     JWT_EXPIRES_IN: '1h',
     GITHUB_TOKEN: process.env.GITHUB_TOKEN,
