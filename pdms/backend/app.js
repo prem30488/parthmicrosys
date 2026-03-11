@@ -23,7 +23,7 @@ const allowedOrigins = [
 
 app.use((req, res, next) => {
     const origin = req.headers.origin;
-    
+
     // Slash-agnostic origin check
     const normalizedOrigin = origin ? origin.replace(/\/$/, '') : null;
     const isAllowed = origin && allowedOrigins.some(ao => ao.replace(/\/$/, '') === normalizedOrigin);
@@ -35,7 +35,7 @@ app.use((req, res, next) => {
         // Fallback for non-browser requests (Postman, curl)
         res.setHeader('Access-Control-Allow-Origin', '*');
     }
-    
+
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
     res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Authorization, Accept, X-Api-Version');
 
@@ -46,9 +46,9 @@ app.use((req, res, next) => {
     next();
 });
 
-app.use(helmet({
-    crossOriginResourcePolicy: { policy: "cross-origin" }
-}));
+//app.use(helmet({
+//    crossOriginResourcePolicy: { policy: "cross-origin" }
+//}));
 
 // Rate limiting
 const limiter = rateLimit({
