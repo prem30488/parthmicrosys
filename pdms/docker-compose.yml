@@ -1,87 +1,29 @@
 version: '3.8'
 
 services:
-  # Backend Service
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: pdms-backend
+  # PostgreSQL Service
+  postgres:
+    image: postgres:15-alpine
+    container_name: pdms-postgres
     ports:
-      - "5000:5000"
+      - "5432:5432"
     environment:
-      - NODE_ENV=production
-      - PORT=5000
-      - MONGO_URI=mongodb://mongodb:27017/pdms
-      - JWT_SECRET=${JWT_SECRET:-your_jwt_secret_key_here}
-      - JWT_EXPIRES_IN=1h
-      - GITHUB_TOKEN=${GITHUB_TOKEN}
-      - GITHUB_OWNER=${GITHUB_OWNER}
-      - GITHUB_TEMPLATE_ECOMMERCE=${GITHUB_TEMPLATE_ECOMMERCE:-ecommerce-template}
-      - GITHUB_TEMPLATE_REALESTATE=${GITHUB_TEMPLATE_REALESTATE:-realestate-template}
-      - VERCEL_TOKEN=${VERCEL_TOKEN}
-      - VERCEL_TEAM_ID=${VERCEL_TEAM_ID}
-      - FRONTEND_URL=http://frontend:3000
-    depends_on:
-      mongodb:
-        condition: service_healthy
-    networks:
-      - pdms-network
-    restart: unless-stopped
-    healthcheck:
-      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5000/api/health" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
-
-  # Frontend Service
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: pdms-frontend
-    ports:
-      - "3000:3000"
-    environment:
-      - VITE_API_URL=http://backend:5000/api
-    depends_on:
-      - backend
-    networks:
-      - pdms-network
-    restart: unless-stopped
-    healthcheck:
-      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
-
-  # MongoDB Service
-  mongodb:
-    image: mongo:latest
-    container_name: pdms-mongodb
-    ports:
-      - "27017:27017"
-    environment:
-      - MONGO_INITDB_DATABASE=pdms
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=pdms
     volumes:
-      - mongodb_data:/data/db
-      - mongodb_config:/data/configdb
+      - postgres_data:/var/lib/postgresql/data
     networks:
       - pdms-network
     restart: unless-stopped
     healthcheck:
-      test: [ "CMD", "mongosh", "--eval", "db.adminCommand('ping')" ]
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 5s
 
 volumes:
-  mongodb_data:
-    driver: local
-  mongodb_config:
+  postgres_data:
     driver: local
 
 networks:

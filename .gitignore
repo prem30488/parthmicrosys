@@ -31,3 +31,4 @@ yarn-error.log*
 # vercel
 .vercel
 pdms/backend/.env.example
+pdms/docker-compose.yml
