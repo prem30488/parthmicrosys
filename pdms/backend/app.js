@@ -33,7 +33,7 @@ const limiter = rateLimit({
     legacyHeaders: false,
     message: { success: false, message: 'Too many requests, please try again later.' },
 });
-app.use('/api/', limiter);
+app.use('/api', limiter);
 
 // Stricter rate limit for auth endpoints
 const authLimiter = rateLimit({
@@ -41,7 +41,7 @@ const authLimiter = rateLimit({
     max: 20,
     message: { success: false, message: 'Too many auth attempts, please try again later.' },
 });
-app.use('/api/auth/', authLimiter);
+app.use('/api/auth', authLimiter);
 
 // --------------- Body Parsing ---------------
 app.use(express.json({ limit: '10mb' }));
