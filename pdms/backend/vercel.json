@@ -18,7 +18,7 @@
         },
         {
           "key": "Access-Control-Allow-Headers",
-          "value": "X-Requested-With, Content-Type, Authorization, Accept, X-Api-Version"
+          "value": "Content-Type, Authorization"
         }
       ]
     }
