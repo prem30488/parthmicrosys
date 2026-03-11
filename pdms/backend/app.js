@@ -13,10 +13,10 @@ const app = express();
 
 // --------------- Security & CORS Middleware ---------------
 const allowedOrigins = [
-    'http://localhost:5173/**',
-    'http://localhost:3000/**',
-    'http://parthmicrosys.vercel.app/**',
-    'https://parthmicrosys.vercel.app/**'
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'http://parthmicrosys.vercel.app',
+    'https://parthmicrosys.vercel.app'
 ];
 
 app.use(
@@ -37,12 +37,13 @@ app.use(
 );
 
 // Explicitly handle preflight requests for all routes
+
 app.options('*', cors());
 
 app.use(helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
-
+app.use(express.json());
 // Rate limiting
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
@@ -52,7 +53,7 @@ const limiter = rateLimit({
     message: { success: false, message: 'Too many requests, please try again later.' },
 });
 app.use('/api', limiter);
-
+app.options("*", cors());
 // Stricter rate limit for auth endpoints
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
