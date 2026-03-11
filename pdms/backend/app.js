@@ -16,8 +16,7 @@ const allowedOrigins = [
     'http://localhost:5173/',
     'http://localhost:3000/',
     'http://parthmicrosys.vercel.app/',
-    'https://parthmicrosys.vercel.app/',
-    'https://parthmicrosys-dpy5.vercel.app/'
+    'https://parthmicrosys.vercel.app/'
 ];
 
 app.use(helmet({
