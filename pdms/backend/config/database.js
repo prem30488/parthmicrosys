@@ -1,14 +1,24 @@
 const { Sequelize } = require('sequelize');
-require('dotenv').config();
+const env = require('./env');
 
-const databaseUrl = process.env.DATABASE_URL || 'postgres://postgres:postgres@localhost:5432/pdms';
+const databaseUrl = env.DATABASE_URL;
+
+if (!databaseUrl) {
+  console.error('❌ DATABASE_URL is not defined in environment variables');
+}
 
 const sequelize = new Sequelize(databaseUrl, {
   dialect: 'postgres',
-  logging: false, // Set to console.log to see SQL queries
+  logging: false,
   define: {
     timestamps: true,
   },
+  dialectOptions: {
+    ssl: databaseUrl && !databaseUrl.includes('localhost') ? {
+      require: true,
+      rejectUnauthorized: false
+    } : false
+  }
 });
 
 module.exports = sequelize;

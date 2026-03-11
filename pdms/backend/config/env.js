@@ -1,8 +1,8 @@
-require('dotenv').config();
+const defaultDb = 'postgresql://postgres:postgres@localhost:5432/pdms?schema=public';
 
 module.exports = {
     PORT: process.env.PORT || 5000,
-    DATABASE_URL: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/pdms?schema=public',
+    DATABASE_URL: (process.env.DATABASE_URL && process.env.DATABASE_URL !== 'null') ? process.env.DATABASE_URL : defaultDb,
     JWT_SECRET: process.env.JWT_SECRET || 'fallback_secret',
     JWT_EXPIRES_IN: '1h',
     GITHUB_TOKEN: process.env.GITHUB_TOKEN,
