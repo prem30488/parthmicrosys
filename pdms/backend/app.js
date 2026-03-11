@@ -11,8 +11,7 @@ const dashboardRoutes = require('./routes/dashboard');
 
 const app = express();
 
-// --------------- Security Middleware ---------------
-app.use(helmet());
+// --------------- Security & CORS Middleware ---------------
 app.use(
     cors({
         origin: [
@@ -22,8 +21,12 @@ app.use(
             'https://parthmicrosys.vercel.app'
         ],
         credentials: true,
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+        allowedHeaders: ['Content-Type', 'Authorization']
     })
 );
+
+app.use(helmet());
 
 // Rate limiting
 const limiter = rateLimit({
