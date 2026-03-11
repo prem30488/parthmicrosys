@@ -15,7 +15,12 @@ const app = express();
 app.use(helmet());
 app.use(
     cors({
-        origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+        origin: [
+            'http://localhost:5173',
+            'http://localhost:3000',
+            'http://parthmicrosys.vercel.app',
+            'https://parthmicrosys.vercel.app'
+        ],
         credentials: true,
     })
 );
