@@ -3,6 +3,8 @@ const generateClientId = require('../utils/generateClientId');
 const deploymentService = require('../services/deploymentService');
 const { Parser } = require('json2csv');
 
+const { Op } = require('sequelize');
+
 // POST /api/products
 exports.createProduct = async (req, res) => {
     try {
@@ -11,7 +13,7 @@ exports.createProduct = async (req, res) => {
         const clientId = await generateClientId();
 
         // Create product record first
-        const product = new Product({
+        const product = await Product.create({
             clientId,
             clientName,
             productName,
@@ -20,27 +22,27 @@ exports.createProduct = async (req, res) => {
             expiryDate,
             paymentStatus: paymentStatus || 'Pending',
             notes: notes || '',
-            deploymentStatus: 'deploying',
-            createdBy: req.admin._id,
+            deploymentStatus: 'pending',
+            createdById: req.admin.id,
         });
-
-        await product.save();
 
         // Trigger deployment in background
         deploymentService
             .deployProduct(product)
             .then(async (deploymentResult) => {
-                product.githubRepoUrl = deploymentResult.githubRepoUrl;
-                product.vercelDeploymentUrl = deploymentResult.vercelDeploymentUrl;
-                product.deploymentStatus = 'deployed';
-                await product.save();
+                await product.update({
+                    githubRepoUrl: deploymentResult.githubRepoUrl,
+                    vercelDeploymentUrl: deploymentResult.vercelDeploymentUrl,
+                    deploymentStatus: 'deployed'
+                });
                 console.log(`✅ Deployment complete for ${clientId}`);
             })
             .catch(async (error) => {
                 console.error(`❌ Deployment failed for ${clientId}:`, error.message);
-                product.deploymentStatus = 'failed';
-                product.notes = `Deployment failed: ${error.message}`;
-                await product.save();
+                await product.update({
+                    deploymentStatus: 'failed',
+                    notes: `Deployment failed: ${error.message}`
+                });
             });
 
         res.status(201).json({
@@ -67,46 +69,45 @@ exports.getProducts = async (req, res) => {
             paymentStatus = '',
         } = req.query;
 
-        const query = { isDeleted: false };
+        const where = { isDeleted: false };
 
         // Search filter
         if (search) {
-            query.$or = [
-                { clientName: { $regex: search, $options: 'i' } },
-                { productName: { $regex: search, $options: 'i' } },
-                { clientId: { $regex: search, $options: 'i' } },
+            where[Op.or] = [
+                { clientName: { [Op.iLike]: `%${search}%` } },
+                { productName: { [Op.iLike]: `%${search}%` } },
+                { clientId: { [Op.iLike]: `%${search}%` } },
             ];
         }
 
         // Category filter
         if (category && ['Ecommerce', 'RealEstate'].includes(category)) {
-            query.category = category;
+            where.category = category;
         }
 
         // Payment status filter
         if (paymentStatus && ['Paid', 'Pending', 'Overdue'].includes(paymentStatus)) {
-            query.paymentStatus = paymentStatus;
+            where.paymentStatus = paymentStatus;
         }
 
-        const sort = {};
-        sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
-
-        const skip = (parseInt(page) - 1) * parseInt(limit);
-
-        const [products, total] = await Promise.all([
-            Product.find(query).sort(sort).skip(skip).limit(parseInt(limit)).lean(),
-            Product.countDocuments(query),
-        ]);
+        const offset = (parseInt(page) - 1) * parseInt(limit);
+        
+        const { count, rows: products } = await Product.findAndCountAll({
+            where,
+            order: [[sortBy, sortOrder.toUpperCase()]],
+            limit: parseInt(limit),
+            offset: offset,
+        });
 
         res.json({
             success: true,
             data: {
                 products,
                 pagination: {
-                    total,
+                    total: count,
                     page: parseInt(page),
                     limit: parseInt(limit),
-                    pages: Math.ceil(total / parseInt(limit)),
+                    pages: Math.ceil(count / parseInt(limit)),
                 },
             },
         });
@@ -119,7 +120,9 @@ exports.getProducts = async (req, res) => {
 // GET /api/products/:id
 exports.getProduct = async (req, res) => {
     try {
-        const product = await Product.findOne({ _id: req.params.id, isDeleted: false });
+        const product = await Product.findOne({
+            where: { id: req.params.id, isDeleted: false }
+        });
         if (!product) {
             return res.status(404).json({ success: false, message: 'Product not found' });
         }
@@ -139,15 +142,15 @@ exports.updateProduct = async (req, res) => {
             if (req.body[key] !== undefined) updates[key] = req.body[key];
         }
 
-        const product = await Product.findOneAndUpdate(
-            { _id: req.params.id, isDeleted: false },
-            { $set: updates },
-            { new: true, runValidators: true }
-        );
+        const product = await Product.findOne({
+            where: { id: req.params.id, isDeleted: false }
+        });
 
         if (!product) {
             return res.status(404).json({ success: false, message: 'Product not found' });
         }
+
+        await product.update(updates);
 
         res.json({ success: true, message: 'Product updated', data: product });
     } catch (error) {
@@ -159,15 +162,15 @@ exports.updateProduct = async (req, res) => {
 // DELETE /api/products/:id (soft delete)
 exports.deleteProduct = async (req, res) => {
     try {
-        const product = await Product.findOneAndUpdate(
-            { _id: req.params.id, isDeleted: false },
-            { $set: { isDeleted: true } },
-            { new: true }
-        );
+        const product = await Product.findOne({
+            where: { id: req.params.id, isDeleted: false }
+        });
 
         if (!product) {
             return res.status(404).json({ success: false, message: 'Product not found' });
         }
+
+        await product.update({ isDeleted: true });
 
         res.json({ success: true, message: 'Product deleted successfully' });
     } catch (error) {

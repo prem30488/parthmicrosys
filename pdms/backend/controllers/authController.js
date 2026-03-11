@@ -7,23 +7,21 @@ exports.register = async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        const existingAdmin = await Admin.findOne({ email: email.toLowerCase() });
+        const existingAdmin = await Admin.findOne({ where: { email: email.toLowerCase() } });
         if (existingAdmin) {
             return res.status(400).json({ success: false, message: 'Email already registered' });
         }
 
-        const admin = new Admin({
-            email: email.toLowerCase(),
+        const admin = await Admin.create({
+            email,
             password_hash: password,
             role: 'admin',
         });
 
-        await admin.save();
-
         res.status(201).json({
             success: true,
             message: 'Admin registered successfully',
-            data: { id: admin._id, email: admin.email, role: admin.role },
+            data: admin, // toJSON will handle _id mapping and password exclusion
         });
     } catch (error) {
         console.error('Register Error:', error);
@@ -36,7 +34,7 @@ exports.login = async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        const admin = await Admin.findOne({ email: email.toLowerCase() });
+        const admin = await Admin.findOne({ where: { email: email.toLowerCase() } });
         if (!admin) {
             return res.status(401).json({ success: false, message: 'Invalid email or password' });
         }
@@ -47,7 +45,7 @@ exports.login = async (req, res) => {
         }
 
         const token = jwt.sign(
-            { id: admin._id, email: admin.email, role: admin.role },
+            { id: admin.id, email: admin.email, role: admin.role },
             env.JWT_SECRET,
             { expiresIn: env.JWT_EXPIRES_IN }
         );
@@ -57,7 +55,7 @@ exports.login = async (req, res) => {
             message: 'Login successful',
             data: {
                 token,
-                admin: { id: admin._id, email: admin.email, role: admin.role },
+                admin,
                 expiresIn: 3600,
             },
         });

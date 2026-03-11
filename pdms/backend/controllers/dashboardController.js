@@ -1,5 +1,6 @@
 const { Op } = require('sequelize');
 const sequelize = require('../config/database');
+const Product = require('../models/Product');
 
 // GET /api/dashboard/stats
 exports.getStats = async (req, res) => {
