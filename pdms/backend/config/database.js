@@ -13,7 +13,14 @@ const sequelize = new Sequelize(databaseUrl, {
   define: {
     timestamps: true,
   },
+  pool: {
+    max: 20,
+    min: 0,
+    acquire: 120000,
+    idle: 10000
+  },
   dialectOptions: {
+    connectTimeout: 120000,
     ssl: databaseUrl && !databaseUrl.includes('localhost') ? {
       require: true,
       rejectUnauthorized: false
