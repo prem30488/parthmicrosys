@@ -13,11 +13,11 @@ const app = express();
 
 // --------------- Security & CORS Middleware ---------------
 const allowedOrigins = [
-    'http://localhost:5173',
-    'http://localhost:3000',
-    'http://parthmicrosys.vercel.app',
-    'https://parthmicrosys.vercel.app',
-    'https://parthmicrosys-dpy5.vercel.app'
+    'http://localhost:5173/',
+    'http://localhost:3000/',
+    'http://parthmicrosys.vercel.app/',
+    'https://parthmicrosys.vercel.app/',
+    'https://parthmicrosys-dpy5.vercel.app/'
 ];
 
 app.use(helmet({
