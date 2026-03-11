@@ -1,50 +1,54 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/database');
 const bcrypt = require('bcryptjs');
 
-const adminSchema = new mongoose.Schema(
-    {
-        email: {
-            type: String,
-            required: [true, 'Email is required'],
-            unique: true,
-            lowercase: true,
-            trim: true,
-            match: [/^\S+@\S+\.\S+$/, 'Please provide a valid email'],
-        },
-        password_hash: {
-            type: String,
-            required: [true, 'Password is required'],
-            minlength: 6,
-        },
-        role: {
-            type: String,
-            enum: ['admin', 'superadmin'],
-            default: 'admin',
-        },
+const Admin = sequelize.define('Admin', {
+  id: {
+    type: DataTypes.UUID,
+    defaultValue: DataTypes.UUIDV4,
+    primaryKey: true,
+  },
+  email: {
+    type: DataTypes.STRING,
+    unique: true,
+    allowNull: false,
+    validate: {
+      isEmail: true,
     },
-    {
-        timestamps: { createdAt: 'createdAt', updatedAt: false },
-    }
-);
-
-// Hash password before saving
-adminSchema.pre('save', async function (next) {
-    if (!this.isModified('password_hash')) return next();
-    const salt = await bcrypt.genSalt(12);
-    this.password_hash = await bcrypt.hash(this.password_hash, salt);
-    next();
+    set(value) {
+      this.setDataValue('email', value.toLowerCase());
+    },
+  },
+  password_hash: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  role: {
+    type: DataTypes.ENUM('admin', 'superadmin'),
+    defaultValue: 'admin',
+  },
+}, {
+  hooks: {
+    beforeSave: async (admin) => {
+      if (admin.changed('password_hash')) {
+        const salt = await bcrypt.genSalt(12);
+        admin.password_hash = await bcrypt.hash(admin.password_hash, salt);
+      }
+    },
+  },
+  timestamps: true,
+  updatedAt: false, // Matches original Mongoose config { timestamps: { createdAt: 'createdAt', updatedAt: false } }
 });
 
-// Compare password method
-adminSchema.methods.comparePassword = async function (candidatePassword) {
-    return bcrypt.compare(candidatePassword, this.password_hash);
+Admin.prototype.comparePassword = async function (candidatePassword) {
+  return bcrypt.compare(candidatePassword, this.password_hash);
 };
 
-// Remove password from JSON output
-adminSchema.methods.toJSON = function () {
-    const obj = this.toObject();
-    delete obj.password_hash;
-    return obj;
+Admin.prototype.toJSON = function () {
+  const values = { ...this.get() };
+  values._id = values.id; // Legacy support for frontend
+  delete values.password_hash;
+  return values;
 };
 
-module.exports = mongoose.model('Admin', adminSchema);
+module.exports = Admin;

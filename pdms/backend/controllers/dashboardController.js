@@ -1,4 +1,5 @@
-const Product = require('../models/Product');
+const { Op } = require('sequelize');
+const sequelize = require('../config/database');
 
 // GET /api/dashboard/stats
 exports.getStats = async (req, res) => {
@@ -21,46 +22,43 @@ exports.getStats = async (req, res) => {
             recentProducts,
             monthlyData,
         ] = await Promise.all([
-            Product.countDocuments({ isDeleted: false }),
-            Product.countDocuments({ isDeleted: false, deploymentStatus: 'deployed' }),
-            Product.countDocuments({
-                isDeleted: false,
-                expiryDate: { $gte: now, $lte: thirtyDaysFromNow },
+            Product.count({ where: { isDeleted: false } }),
+            Product.count({ where: { isDeleted: false, deploymentStatus: 'deployed' } }),
+            Product.count({
+                where: {
+                    isDeleted: false,
+                    expiryDate: { [Op.between]: [now, thirtyDaysFromNow] },
+                },
             }),
-            Product.countDocuments({ isDeleted: false, paymentStatus: 'Paid' }),
-            Product.countDocuments({ isDeleted: false, paymentStatus: 'Pending' }),
-            Product.countDocuments({ isDeleted: false, paymentStatus: 'Overdue' }),
-            Product.countDocuments({ isDeleted: false, deploymentStatus: 'deployed' }),
-            Product.countDocuments({ isDeleted: false, deploymentStatus: 'failed' }),
-            Product.countDocuments({ isDeleted: false, deploymentStatus: 'deploying' }),
-            Product.countDocuments({ isDeleted: false, category: 'Ecommerce' }),
-            Product.countDocuments({ isDeleted: false, category: 'RealEstate' }),
-            Product.find({ isDeleted: false })
-                .sort({ createdAt: -1 })
-                .limit(5)
-                .select('clientId clientName category deploymentStatus createdAt paymentStatus')
-                .lean(),
-            // Monthly product creation for last 6 months
-            Product.aggregate([
-                {
-                    $match: {
-                        isDeleted: false,
-                        createdAt: {
-                            $gte: new Date(now.getFullYear(), now.getMonth() - 5, 1),
-                        },
-                    },
-                },
-                {
-                    $group: {
-                        _id: {
-                            year: { $year: '$createdAt' },
-                            month: { $month: '$createdAt' },
-                        },
-                        count: { $sum: 1 },
-                    },
-                },
-                { $sort: { '_id.year': 1, '_id.month': 1 } },
-            ]),
+            Product.count({ where: { isDeleted: false, paymentStatus: 'Paid' } }),
+            Product.count({ where: { isDeleted: false, paymentStatus: 'Pending' } }),
+            Product.count({ where: { isDeleted: false, paymentStatus: 'Overdue' } }),
+            Product.count({ where: { isDeleted: false, deploymentStatus: 'deployed' } }),
+            Product.count({ where: { isDeleted: false, deploymentStatus: 'failed' } }),
+            Product.count({ where: { isDeleted: false, deploymentStatus: 'deploying' } }),
+            Product.count({ where: { isDeleted: false, category: 'Ecommerce' } }),
+            Product.count({ where: { isDeleted: false, category: 'RealEstate' } }),
+            Product.findAll({
+                where: { isDeleted: false },
+                order: [['createdAt', 'DESC']],
+                limit: 5,
+                attributes: ['clientId', 'clientName', 'category', 'deploymentStatus', 'createdAt', 'paymentStatus'],
+            }),
+            // Monthly product creation for last 6 months using raw query for PostgreSQL
+            sequelize.query(`
+                SELECT 
+                    EXTRACT(YEAR FROM "createdAt") as year,
+                    EXTRACT(MONTH FROM "createdAt") as month,
+                    COUNT(*) as count
+                FROM "Products"
+                WHERE "isDeleted" = false
+                AND "createdAt" >= :startDate
+                GROUP BY year, month
+                ORDER BY year ASC, month ASC
+            `, {
+                replacements: { startDate: new Date(now.getFullYear(), now.getMonth() - 5, 1) },
+                type: sequelize.QueryTypes.SELECT
+            }),
         ]);
 
         // Format monthly data for chart
@@ -69,11 +67,11 @@ exports.getStats = async (req, res) => {
         for (let i = 5; i >= 0; i--) {
             const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
             const found = monthlyData.find(
-                (m) => m._id.year === d.getFullYear() && m._id.month === d.getMonth() + 1
+                (m) => parseInt(m.year) === d.getFullYear() && parseInt(m.month) === d.getMonth() + 1
             );
             chartData.push({
                 label: `${months[d.getMonth()]} ${d.getFullYear()}`,
-                count: found ? found.count : 0,
+                count: found ? parseInt(found.count) : 0,
             });
         }
 

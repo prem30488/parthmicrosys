@@ -1,81 +1,88 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/database');
 
-const productSchema = new mongoose.Schema(
-    {
-        clientId: {
-            type: String,
-            required: true,
-            unique: true,
-            trim: true,
-        },
-        clientName: {
-            type: String,
-            required: [true, 'Client name is required'],
-            trim: true,
-        },
-        productName: {
-            type: String,
-            required: [true, 'Product name is required'],
-            trim: true,
-        },
-        category: {
-            type: String,
-            required: [true, 'Category is required'],
-            enum: ['Ecommerce', 'RealEstate'],
-        },
-        themeName: {
-            type: String,
-            required: [true, 'Theme name is required'],
-            trim: true,
-        },
-        githubRepoUrl: {
-            type: String,
-            default: '',
-        },
-        vercelDeploymentUrl: {
-            type: String,
-            default: '',
-        },
-        deploymentStatus: {
-            type: String,
-            enum: ['pending', 'deploying', 'deployed', 'failed'],
-            default: 'pending',
-        },
-        expiryDate: {
-            type: Date,
-            required: [true, 'Expiry date is required'],
-        },
-        paymentStatus: {
-            type: String,
-            enum: ['Paid', 'Pending', 'Overdue'],
-            default: 'Pending',
-        },
-        version: {
-            type: String,
-            default: 'v1.0',
-        },
-        notes: {
-            type: String,
-            default: '',
-        },
-        isDeleted: {
-            type: Boolean,
-            default: false,
-        },
-        createdBy: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Admin',
-        },
-    },
-    {
-        timestamps: true,
-    }
-);
+const Product = sequelize.define('Product', {
+  id: {
+    type: DataTypes.UUID,
+    defaultValue: DataTypes.UUIDV4,
+    primaryKey: true,
+  },
+  clientId: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: true,
+  },
+  clientName: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  productName: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  category: {
+    type: DataTypes.ENUM('Ecommerce', 'RealEstate'),
+    allowNull: false,
+  },
+  themeName: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  githubRepoUrl: {
+    type: DataTypes.STRING,
+    defaultValue: '',
+  },
+  vercelDeploymentUrl: {
+    type: DataTypes.STRING,
+    defaultValue: '',
+  },
+  deploymentStatus: {
+    type: DataTypes.ENUM('pending', 'deploying', 'deployed', 'failed'),
+    defaultValue: 'pending',
+  },
+  expiryDate: {
+    type: DataTypes.DATE,
+    allowNull: false,
+  },
+  paymentStatus: {
+    type: DataTypes.ENUM('Paid', 'Pending', 'Overdue'),
+    defaultValue: 'Pending',
+  },
+  version: {
+    type: DataTypes.STRING,
+    defaultValue: 'v1.0',
+  },
+  notes: {
+    type: DataTypes.TEXT,
+    defaultValue: '',
+  },
+  isDeleted: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+  },
+  createdById: {
+    type: DataTypes.UUID,
+    allowNull: true,
+  },
+}, {
+  timestamps: true,
+  indexes: [
+    { fields: ['clientId'] },
+    { fields: ['isDeleted'] },
+    { fields: ['category'] },
+    { fields: ['expiryDate'] },
+  ],
+});
 
-// Index for search performance
-productSchema.index({ clientName: 'text', productName: 'text', clientId: 'text' });
-productSchema.index({ isDeleted: 1 });
-productSchema.index({ category: 1 });
-productSchema.index({ expiryDate: 1 });
+Product.prototype.toJSON = function () {
+  const values = { ...this.get() };
+  values._id = values.id; // Legacy support for frontend
+  return values;
+};
 
-module.exports = mongoose.model('Product', productSchema);
+// Relationships
+const Admin = require('./Admin');
+Product.belongsTo(Admin, { as: 'creator', foreignKey: 'createdById' });
+Admin.hasMany(Product, { foreignKey: 'createdById' });
+
+module.exports = Product;

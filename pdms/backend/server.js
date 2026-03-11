@@ -1,10 +1,15 @@
 const app = require('./app');
-const connectDB = require('./config/db');
-const env = require('./config/env');
+const sequelize = require('./config/database');
 
 const startServer = async () => {
     try {
-        await connectDB();
+        await sequelize.authenticate();
+        console.log('✅ PostgreSQL connected successfully');
+        
+        // Sync models
+        await sequelize.sync({ alter: true });
+        console.log('✅ Models synchronized');
+
         app.listen(env.PORT, () => {
             console.log(`\n🚀 PDMS Server running on port ${env.PORT}`);
             console.log(`📡 API: http://localhost:${env.PORT}/api`);

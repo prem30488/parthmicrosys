@@ -12,7 +12,9 @@ const auth = async (req, res, next) => {
         const token = authHeader.split(' ')[1];
         const decoded = jwt.verify(token, env.JWT_SECRET);
 
-        const admin = await Admin.findById(decoded.id).select('-password_hash');
+        const admin = await Admin.findByPk(decoded.id, {
+            attributes: { exclude: ['password_hash'] }
+        });
         if (!admin) {
             return res.status(401).json({ success: false, message: 'Token is invalid. User not found.' });
         }
