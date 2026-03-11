@@ -11,7 +11,9 @@ const dashboardRoutes = require('./routes/dashboard');
 
 const app = express();
 
-// --------------- Security & CORS Middleware ---------------
+// --------------- Manual CORS Middleware ---------------
+// Standard CORS packages can be finicky on specific Vercel deployments.
+// Manual implementation at the top of the stack ensures preflights succeed first.
 const allowedOrigins = [
     'http://localhost:5173',
     'http://localhost:3000',
@@ -19,26 +21,31 @@ const allowedOrigins = [
     'https://parthmicrosys.vercel.app'
 ];
 
+app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    
+    // Slash-agnostic origin check
+    const normalizedOrigin = origin ? origin.replace(/\/$/, '') : null;
+    const isAllowed = !origin || allowedOrigins.some(ao => ao.replace(/\/$/, '') === normalizedOrigin);
+
+    if (isAllowed) {
+        res.setHeader('Access-Control-Allow-Origin', origin || '*');
+    }
+    
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+    res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Authorization, Accept, X-Api-Version');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+
+    // Handle Preflight OPTIONS immediately
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+    }
+    next();
+});
+
 app.use(helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
-app.options("*", cors());
-app.use(
-    cors({
-        origin: (origin, callback) => {
-            // Allow requests with no origin (like mobile apps or curl)
-            if (!origin) return callback(null, true);
-            if (allowedOrigins.indexOf(origin) !== -1) {
-                callback(null, true);
-            } else {
-                callback(null, false);
-            }
-        },
-        credentials: true,
-        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-        allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
-    })
-);
 
 // Rate limiting
 const limiter = rateLimit({
