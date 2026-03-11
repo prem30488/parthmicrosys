@@ -12,21 +12,36 @@ const dashboardRoutes = require('./routes/dashboard');
 const app = express();
 
 // --------------- Security & CORS Middleware ---------------
+const allowedOrigins = [
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'http://parthmicrosys.vercel.app',
+    'https://parthmicrosys.vercel.app'
+];
+
 app.use(
     cors({
-        origin: [
-            'http://localhost:5173',
-            'http://localhost:3000',
-            'http://parthmicrosys.vercel.app',
-            'https://parthmicrosys.vercel.app'
-        ],
+        origin: (origin, callback) => {
+            // Allow requests with no origin (like mobile apps or curl)
+            if (!origin) return callback(null, true);
+            if (allowedOrigins.indexOf(origin) !== -1) {
+                callback(null, true);
+            } else {
+                callback(null, false);
+            }
+        },
         credentials: true,
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-        allowedHeaders: ['Content-Type', 'Authorization']
+        allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
     })
 );
 
-app.use(helmet());
+// Explicitly handle preflight requests for all routes
+app.options('*', cors());
+
+app.use(helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
 
 // Rate limiting
 const limiter = rateLimit({
