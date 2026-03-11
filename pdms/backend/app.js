@@ -11,7 +11,9 @@ const dashboardRoutes = require('./routes/dashboard');
 
 const app = express();
 
-// --------------- Security & CORS Middleware ---------------
+// --------------- Manual CORS Middleware ---------------
+// Standard CORS packages can be finicky on specific Vercel deployments.
+// Manual implementation ensures headers are set correctly every time.
 const allowedOrigins = [
     'http://localhost:5173',
     'http://localhost:3000',
@@ -19,31 +21,26 @@ const allowedOrigins = [
     'https://parthmicrosys.vercel.app'
 ];
 
-app.use(
-    cors({
-        origin: (origin, callback) => {
-            // Allow requests with no origin (like mobile apps or curl)
-            if (!origin) return callback(null, true);
-            if (allowedOrigins.indexOf(origin) !== -1) {
-                callback(null, true);
-            } else {
-                callback(null, false);
-            }
-        },
-        credentials: true,
-        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-        allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
-    })
-);
+app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    if (allowedOrigins.includes(origin) || !origin) {
+        res.setHeader('Access-Control-Allow-Origin', origin || '*');
+    }
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+    res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Authorization, Accept');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
 
-// Explicitly handle preflight requests for all routes
-
-app.options('*', cors());
+    // Handle Preflight OPTIONS
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+    }
+    next();
+});
 
 app.use(helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
-app.use(express.json());
+
 // Rate limiting
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
@@ -53,7 +50,7 @@ const limiter = rateLimit({
     message: { success: false, message: 'Too many requests, please try again later.' },
 });
 app.use('/api', limiter);
-app.options("*", cors());
+
 // Stricter rate limit for auth endpoints
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
