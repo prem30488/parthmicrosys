@@ -10,7 +10,7 @@
         },
         {
           "key": "Access-Control-Allow-Origin",
-          "value": "https://parthmicrosys.vercel.app"
+          "value": "https://parthmicrosys.vercel.app/"
         },
         {
           "key": "Access-Control-Allow-Methods",
