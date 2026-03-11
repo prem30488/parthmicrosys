@@ -26,15 +26,18 @@ app.use((req, res, next) => {
     
     // Slash-agnostic origin check
     const normalizedOrigin = origin ? origin.replace(/\/$/, '') : null;
-    const isAllowed = !origin || allowedOrigins.some(ao => ao.replace(/\/$/, '') === normalizedOrigin);
+    const isAllowed = origin && allowedOrigins.some(ao => ao.replace(/\/$/, '') === normalizedOrigin);
 
     if (isAllowed) {
-        res.setHeader('Access-Control-Allow-Origin', origin || '*');
+        res.setHeader('Access-Control-Allow-Origin', origin);
+        res.setHeader('Access-Control-Allow-Credentials', 'true');
+    } else if (!origin) {
+        // Fallback for non-browser requests (Postman, curl)
+        res.setHeader('Access-Control-Allow-Origin', '*');
     }
     
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
     res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Authorization, Accept, X-Api-Version');
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
 
     // Handle Preflight OPTIONS immediately
     if (req.method === 'OPTIONS') {
