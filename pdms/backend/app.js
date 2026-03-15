@@ -46,9 +46,9 @@ app.use((req, res, next) => {
     next();
 });
 
-//app.use(helmet({
-//    crossOriginResourcePolicy: { policy: "cross-origin" }
-//}));
+app.use(helmet({
+    crossOriginResourcePolicy: { policy: "same-origin" }
+}));
 
 // Rate limiting
 const limiter = rateLimit({
