@@ -11,8 +11,44 @@ const dashboardRoutes = require('./routes/dashboard');
 
 const app = express();
 
-app.use(cors());
-app.use(helmet());
+// --------------- Manual CORS Middleware ---------------
+// Standard CORS packages can be finicky on specific Vercel deployments.
+// Manual implementation at the top of the stack ensures preflights succeed first.
+const allowedOrigins = [
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'http://parthmicrosys.vercel.app',
+    'https://parthmicrosys.vercel.app'
+];
+
+app.use((req, res, next) => {
+    const origin = req.headers.origin;
+
+    // Slash-agnostic origin check
+    const normalizedOrigin = origin ? origin.replace(/\/$/, '') : null;
+    const isAllowed = origin && allowedOrigins.some(ao => ao.replace(/\/$/, '') === normalizedOrigin);
+
+    if (isAllowed) {
+        res.setHeader('Access-Control-Allow-Origin', origin);
+        res.setHeader('Access-Control-Allow-Credentials', 'true');
+    } else if (!origin) {
+        // Fallback for non-browser requests (Postman, curl)
+        res.setHeader('Access-Control-Allow-Origin', '*');
+    }
+
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+    res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Authorization, Accept, X-Api-Version');
+
+    // Handle Preflight OPTIONS immediately
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+    }
+    next();
+});
+
+app.use(helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
 
 // Rate limiting
 const limiter = rateLimit({
