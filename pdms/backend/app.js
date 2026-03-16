@@ -76,6 +76,7 @@ app.use(express.urlencoded({ extended: true }));
 if (process.env.NODE_ENV !== 'production') {
     app.use(morgan('dev'));
 }
+app.options("*", cors());
 
 // --------------- Routes ---------------
 app.get('/api/health', (req, res) => {
