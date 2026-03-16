@@ -78,19 +78,28 @@ if (process.env.NODE_ENV !== 'production') {
 }
 app.options("*", cors());
 
+const { Pool } = require('pg');
+
+const pool = new Pool({
+    connectionString: process.env.DATABASE_URL
+});
 // --------------- Routes ---------------
 app.get('/api/health', async (req, res) => {
     //res.json({ success: true, message: 'PDMS API is running', timestamp: new Date().toISOString() });
     try {
         await pool.query("SELECT 1");
         res.status(200).json({
+            success: true,
             status: "healthy",
-            database: "connected"
+            database: "connected",
+            message: 'PDMS API is running', timestamp: new Date().toISOString()
         });
     } catch (err) {
         res.status(500).json({
+            success: false,
             status: "unhealthy " + err.message,
-            error: err.message
+            error: err.message,
+            message: 'PDMS API is not running', timestamp: new Date().toISOString()
         });
     }
 });
