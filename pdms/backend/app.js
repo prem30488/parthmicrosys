@@ -79,9 +79,22 @@ if (process.env.NODE_ENV !== 'production') {
 app.options("*", cors());
 
 // --------------- Routes ---------------
-app.get('/api/health', (req, res) => {
-    res.json({ success: true, message: 'PDMS API is running', timestamp: new Date().toISOString() });
+app.get('/api/health', async (req, res) => {
+    //res.json({ success: true, message: 'PDMS API is running', timestamp: new Date().toISOString() });
+    try {
+        await pool.query("SELECT 1");
+        res.status(200).json({
+            status: "healthy",
+            database: "connected"
+        });
+    } catch (err) {
+        res.status(500).json({
+            status: "unhealthy " + err.message,
+            error: err.message
+        });
+    }
 });
+
 
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
