@@ -10,7 +10,7 @@ const productRoutes = require('./routes/products');
 const dashboardRoutes = require('./routes/dashboard');
 
 const app = express();
-
+app.set("trust proxy", 1);
 // --------------- Manual CORS Middleware ---------------
 // Standard CORS packages can be finicky on specific Vercel deployments.
 // Manual implementation at the top of the stack ensures preflights succeed first.
