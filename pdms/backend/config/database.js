@@ -21,10 +21,7 @@ const sequelize = new Sequelize(databaseUrl, {
   },
   dialectOptions: {
     connectTimeout: 120000,
-    ssl: databaseUrl && !databaseUrl.includes('localhost') ? {
-      require: true,
-      rejectUnauthorized: false
-    } : false
+    ssl: false
   }
 });
 
